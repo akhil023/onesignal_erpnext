@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include onesiganl *.css
+recursive-include onesiganl *.csv
+recursive-include onesiganl *.html
+recursive-include onesiganl *.ico
+recursive-include onesiganl *.js
+recursive-include onesiganl *.json
+recursive-include onesiganl *.md
+recursive-include onesiganl *.png
+recursive-include onesiganl *.py
+recursive-include onesiganl *.svg
+recursive-include onesiganl *.txt
+recursive-exclude onesiganl *.pyc
