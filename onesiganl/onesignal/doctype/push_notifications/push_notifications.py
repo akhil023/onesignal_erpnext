@@ -8,35 +8,39 @@ from frappe.model.document import Document
 
 class PushNotifications(Document):
 	def on_update(self):
-		print "*"*200
-		import requests
-		import json
-		print 
-		header = {"Content-Type": "application/json; charset=utf-8",
-		          "Authorization": "Basic ZTYzYzU2ZmYtMTMxMy00MjZlLTllNjUtODBmYzZiM2QxOTUy"}
-
-		payload = {"app_id": "38209b35-8905-4e32-8437-f8ecc511a0be",
-		           "included_segments": ["All"],
-		           "headings": {"en": self.title},
-		           "contents": {"en": self.message}}
-		 
-		req = requests.post("https://onesignal.com/api/v1/notifications", headers=header, data=json.dumps(payload))
-		 
-		print(req.status_code, req.reason)
+		send_msg_with_onesignal(self.title,self.message,sLink=self.link_url,sChromeIcon=self.chrome_icon,sFirefoxIcon=self.firefox_icon)
 		
 	def on_save(self):
-		print "*"*200
-		import requests
-		import json
-		print 
-		header = {"Content-Type": "application/json; charset=utf-8",
-		          "Authorization": "Basic ZTYzYzU2ZmYtMTMxMy00MjZlLTllNjUtODBmYzZiM2QxOTUy"}
+		send_msg_with_onesignal(self.title,self.message,sLink=self.link_url,sChromeIcon=self.chrome_icon,sFirefoxIcon=self.firefox_icon)
 
-		payload = {"app_id": "38209b35-8905-4e32-8437-f8ecc511a0be",
-		           "included_segments": ["All"],
-		           "headings": {"en": self.title},
-		           "contents": {"en": self.message}}
-		 
-		req = requests.post("https://onesignal.com/api/v1/notifications", headers=header, data=json.dumps(payload))
-		 
-		print(req.status_code, req.reason)
+def send_msg_with_onesignal(sTitle,sMessage,sLink=None,sChromeIcon=None,sFirefoxIcon=None):
+	print "**********************************************************************************************************"
+	import requests
+	import json
+	sAppId = frappe.db.get_single_value("Push Settings","app_id")
+	sAuthoization = frappe.db.get_single_value("Push Settings","authorization")
+	if not (sAppId and sAuthoization):
+		frappe.throw("Please provide App Id and Authorization tokens from one signal account in settings.")
+
+	sLink 			= sLink if sLink else frappe.db.get_single_value("Push Settings","default_on_click_link_url")
+	sChromeIcon 	= sChromeIcon if sChromeIcon else frappe.db.get_single_value("Push Settings","default_chrome_icon_url")
+	sFirefoxIcon 	= sFirefoxIcon if sFirefoxIcon else frappe.db.get_single_value("Push Settings","default_firefox_icon_url")
+
+	dHeader 		= {
+						"Content-Type"	: "application/json; charset=utf-8",
+						"Authorization"	: "Basic "+sAuthoization
+						}
+
+	dPayload 		= {
+						"app_id"			: frappe.db.get_single_value("Push Settings","app_id"),
+						"included_segments"	: ["All"],
+						"headings"			: {"en": sTitle},
+						"contents"			: {"en": sMessage},
+						"url"				: sLink,
+						"chrome_web_icon"	: sChromeIcon,
+						"firefox_icon"		: sFirefoxIcon
+	           }
+	 
+	oReq = requests.post("https://onesignal.com/api/v1/notifications", headers=dHeader, data=json.dumps(dPayload))
+	 
+	print(oReq.status_code, oReq.reason)
